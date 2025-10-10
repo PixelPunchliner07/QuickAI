@@ -81,10 +81,30 @@ await connectCloudinary();
   
 
 app.use(express.json());
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // your frontend
-  credentials: true
-}));
+
+
+const allowedOrigins = [
+  "https://quick-ai-u3x1.vercel.app", // your frontend
+  "http://localhost:5173", // for local development (optional)
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+
+
 app.use(clerkMiddleware())  // Attach Clerk middleware first
 app.use('/api/webhook', clerkBillingWebhookRouter);
 
