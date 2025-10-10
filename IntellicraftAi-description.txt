@@ -1,0 +1,26 @@
+Project Overall Description -Intellicraft Ai
+
+This is an ai saas app that has teh following fetures : blog titles , article writing, image generation, background removal , removing objects and resume revivewing:
+
+
+!!! Basics to remember
+neon account is logined with cotton shah but the gray one
+clerk is logined with thunder5737x
+clipdrop is krishparekh11052005
+cloudinary is thunder5737x
+
+
+
+
+Essential Techstack:
+1.Reactjs for frontend
+2.Clerk for authorization and patyment gateway
+3. React lucide for icons 
+4. For Backend Database we are using neon which is a serverless protuges/using sql
+5. for image storage we are using cloudinary
+6. for image generation we are using clipdrop
+7. for ai generation we are using openrouter
+8. for background removal we use multer
+9. we used nrok for deploying our backend temporarayly so that we can use webhooks
+10. we used clerk webhooks for updating the user's private metadat
+
