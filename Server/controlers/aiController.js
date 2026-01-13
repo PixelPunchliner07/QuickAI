@@ -523,6 +523,17 @@ export const generateArticle = async (req, res) => {
     const { prompt, length } = req.body;
     const plan = req.plan || 'free';
     const free_usage = req.free_usage ?? 0;
+    const requestedTokens = Number(length) || 512;
+
+    const MAX_TOKENS_BY_PLAN = {
+      free: 500,
+      premium: 1500,
+    };
+
+    const maxTokens = Math.min(
+      requestedTokens,
+      MAX_TOKENS_BY_PLAN[plan] || 500
+    );
 
     if (!prompt) {
       return res.status(400).json({ success: false, message: 'Prompt is required' });
@@ -535,7 +546,7 @@ export const generateArticle = async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'openai/gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: Number(length) || 512,
+      max_tokens: maxTokens,
       temperature: 0.7,
     });
 
@@ -557,6 +568,12 @@ export const generateArticle = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Article generated successfully', content });
   } catch (error) {
+     if (error?.response?.status === 402) {
+      return res.status(402).json({
+        success: false,
+        message: 'Free AI limit reached. Try shorter content or upgrade.',
+      });
+    }
     console.error('[generateArticle] error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
@@ -602,6 +619,12 @@ export const generateBlogTitle = async (req, res) => {
 
     res.status(200).json({ success: true, titles: content.split('\n') });
   } catch (error) {
+    if (error?.response?.status === 402) {
+      return res.status(402).json({
+        success: false,
+        message: 'Free AI limit reached. Try shorter content or upgrade.',
+      });
+    }
     console.error('[generateBlogTitle] error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
