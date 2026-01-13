@@ -72,6 +72,8 @@ import { clerkMiddleware, requireAuth } from '@clerk/express';
 import connectCloudinary from './configs/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
 import clerkBillingWebhookRouter from './hooks/webHook.js' // adjust path
+import rateLimit from 'express-rate-limit';
+
 
 
 
@@ -87,6 +89,11 @@ const allowedOrigins = [
   "https://quick-ai-u3x1.vercel.app", // your frontend
   "http://localhost:5173", // for local development (optional)
 ];
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,             // 5 requests per minute per IP
+});
 
 app.use(
   cors({
