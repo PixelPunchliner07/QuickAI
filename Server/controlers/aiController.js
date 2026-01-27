@@ -497,10 +497,22 @@ import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import FormData from 'form-data';
-import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+// Polyfill DOMMatrix for Node.js environment
+if (!globalThis.DOMMatrix) {
+  globalThis.DOMMatrix = class DOMMatrix {
+    constructor(init = '') {
+      this.a = 1;
+      this.b = 0;
+      this.c = 0;
+      this.d = 1;
+      this.e = 0;
+      this.f = 0;
+    }
+  };
+}
+
+import * as pdfjsLib from 'pdfjs-dist';
 
 // OpenRouter initialization
 const openai = new OpenAI({
@@ -744,8 +756,16 @@ export const reviewResume = async (req, res) => {
 
     // Read and parse the PDF file
     const fileBuffer = fs.readFileSync(req.file.path);
-    const pdfData = await pdfParse(fileBuffer);
-    const resumeText = pdfData.text;
+    
+    // Extract text from PDF using pdfjs-dist
+    const pdfData = await pdfjsLib.getDocument({ data: fileBuffer }).promise;
+    let resumeText = '';
+    
+    for (let i = 1; i <= pdfData.numPages; i++) {
+      const page = await pdfData.getPage(i);
+      const textContent = await page.getTextContent();
+      resumeText += textContent.items.map(item => item.str).join(' ') + '\n';
+    }
 
     if (!resumeText || resumeText.trim().length === 0) {
       return res.status(400).json({ success: false, message: 'Could not extract text from PDF' });
