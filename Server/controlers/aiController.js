@@ -497,6 +497,10 @@ import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import FormData from 'form-data';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 // OpenRouter initialization
 const openai = new OpenAI({
@@ -730,12 +734,58 @@ export const reviewResume = async (req, res) => {
     const authData = typeof req.auth === 'function' ? await req.auth() : req.auth || {};
     const userId = authData.userId;
 
-    const content = "Resume reviewed successfully";
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
 
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Resume file is required' });
+    }
+
+    // Read and parse the PDF file
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdfParse(fileBuffer);
+    const resumeText = pdfData.text;
+
+    if (!resumeText || resumeText.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Could not extract text from PDF' });
+    }
+
+    // Create prompt for resume review
+    const reviewPrompt = `Please review the following resume and provide detailed feedback on:
+1. Strengths and accomplishments highlighted
+2. Areas for improvement
+3. Formatting and structure suggestions
+4. Keywords and skills optimization
+5. Overall score (out of 10) with reasoning
+
+Resume Content:
+${resumeText}
+
+Please provide constructive, actionable feedback.`;
+
+    // Send to OpenAI for analysis
+    const completion = await openai.chat.completions.create({
+      model: 'openai/gpt-4o',
+      messages: [{ role: 'user', content: reviewPrompt }],
+      max_tokens: 1500,
+      temperature: 0.7,
+    });
+
+    const content = completion.choices?.[0]?.message?.content || '';
+
+    if (!content) {
+      return res.status(500).json({ success: false, message: 'AI failed to generate review' });
+    }
+
+    // Save to database
     await sql.query(
       "INSERT INTO creations (user_id, prompt, content, type) VALUES ($1, $2, $3, $4)",
       [userId, 'Review the uploaded resume', content, 'resume-review']
     );
+
+    // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
 
     res.json({ success: true, content });
   } catch (error) {
