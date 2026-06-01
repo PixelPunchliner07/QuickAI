@@ -539,11 +539,11 @@ export const generateArticle = async (req, res) => {
     const { prompt, length } = req.body;
     const plan = req.plan || 'free';
     const free_usage = req.free_usage ?? 0;
-    const requestedTokens = Number(length) || 512;
+    const requestedTokens = Number(length) || 300;
 
     const MAX_TOKENS_BY_PLAN = {
       free: 300,
-      premium: 800,
+      premium: 300,
     };
 
     const maxTokens = Math.min(
