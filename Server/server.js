@@ -86,7 +86,8 @@ app.use(express.json());
 
 
 const allowedOrigins = [
-  "https://quick-ai-u3x1.vercel.app", // your frontend
+  "https://quick-ai-u3x1.vercel.app",
+  "https://quick-ai-u3x1-pdpqrgr68-krishparekh11052005-gmailcoms-projects.vercel.app", // your frontend
   "http://localhost:5173", // for local development (optional)
 ];
 
