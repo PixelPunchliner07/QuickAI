@@ -548,7 +548,7 @@ export const generateArticle = async (req, res) => {
 
     const maxTokens = Math.min(
       requestedTokens,
-      MAX_TOKENS_BY_PLAN[plan] || 500
+      MAX_TOKENS_BY_PLAN[plan] || 300
     );
 
     if (!prompt) {
